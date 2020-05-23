@@ -6,6 +6,11 @@ import com.github.database.rider.core.api.configuration.Orthography;
 import com.github.database.rider.core.api.dataset.DataSet;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import junit.framework.Assert;
+
 import org.approvaltests.Approvals;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +31,29 @@ public class RestauranteResourceTest {
                 .statusCode(200)
                 .extract().asString();
        Approvals.verifyJson(resultado);
+    }
+    
+    private RequestSpecification given() {
+    	return RestAssured.given().contentType(ContentType.JSON);
+    }
+    
+    @Test
+    @DataSet("restaurantes-cenario-1.yml")
+    public void testAlterarRestaurantes() {
+    	Restaurante dto = new Restaurante();
+    	dto.nome = "novoNome";
+    	Long parameterValue = 123L;
+        given()
+                .when().pathParam("id", parameterValue)
+                .body(dto)
+                .when().put("/restaurantes/{id}")
+                .then()
+                .statusCode(200)
+                .extract().asString();
+        
+        Restaurante findById = Restaurante.findById(parameterValue);
+        
+       Assert.assertEquals(dto.nome, findById.nome);
     }
 
 }
